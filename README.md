@@ -27,6 +27,12 @@ To simplify the setup process, DB-BERT now uses Docker to encapsulate its enviro
      git clone https://github.com/JoelJacobStephen/DB-Bert-Mod
      cd dbbert
   ```
+3. **Download Benchmarks**
+- Install [TPC-H Benchmark](https://drive.google.com/uc?id=1BjHTNXwGoZIkadECex3PzMdYuSJ1NCOp)
+- Install [JOB Benchmark](https://drive.google.com/uc?id=1-dT0jCGFLwB1VH_76lLn6V-f4E39Eoiy)
+
+4. **Move Downloaded Folders to the `scripts` directory**
+- Move both `tpchdata` and `jobdata` folders into the `scripts` folder.
 
 ### Setup with Docker
 
