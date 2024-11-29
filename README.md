@@ -8,11 +8,9 @@ To address these issues, this project introduces significant updates, including 
 
 Additionally, certain core modules have been reimplemented as part of this project. This reimplementation serves not only to improve compatibility but also as a means to better understand the underlying algorithms and methodologies used in DB-BERT. These efforts aim to preserve the essence of DB-BERT while enhancing its usability, maintainability, and relevance in contemporary systems.
 
-# DB-BERT: The Tuning Tool that "Reads" the Manual
-
+## What is DB-BERT?
 DB-BERT extracts hints for database parameter settings from text via natural language analysis. It then optimizes parameter settings for a given workload and performance metric using reinforcement learning.
-
----
+Github repo: [DB-Bert](https://github.com/itrummer/dbbert)
 
 ## Running Experiments
 
