@@ -8,59 +8,82 @@
 
 DB-BERT extracts hints for database parameter settings from text via natural language analysis. It then optimizes parameter settings for a given workload and performance metric using reinforcement learning.
 
-# Running Experiments
+Here is the updated README file with instructions for setting up and running DB-BERT using Docker:
 
-The following instructions have been tested on a p3.2xlarge EC 2 instance with Deep Learning Base GPU AMI (Ubuntu 20.04) 20230811 AMI. On that system, run them from the ubuntu home directory.
+DB-BERT MOD
 
-1. Install PostgreSQL and MySQL, e.g., run:
+An attempt to slightly modify DB-BERT as a part of an implementation project
 
-```
-sudo apt-get update
-sudo apt install postgresql-12
-sudo apt install mysql-server-8.0
-```
+<img align='right' src='https://github.com/itrummer/dbbert/blob/7f8b9914ca4ef1081cfeeb1685c47e93a951ce6e/dbbert.png' width='192'>
 
-2. Create a user named "dbbert" with password "dbbert" for PostgreSQL and MySQL:
 
-```
-sudo adduser dbbert # Type "dbbert" as password twice, then press enter repeatedly, finally "Y" to confirm
-sudo -u postgres psql -c "create user dbbert with password 'dbbert' superuser;"
-sudo mysql -e "create user 'dbbert'@'localhost' identified by 'dbbert'; grant all privileges on *.* to 'dbbert'@'localhost'; flush privileges;"
-```
+DB-BERT: the Tuning Tool that “Reads” the Manual
 
-3. Download this repository, e.g., run:
+DB-BERT extracts hints for database parameter settings from text via natural language analysis. It then optimizes parameter settings for a given workload and performance metric using reinforcement learning.
 
-```
-git clone https://github.com/itrummer/dbbert
-```
+Running Experiments
 
-4. Install dependencies:
+To simplify the setup process, DB-BERT now uses Docker to encapsulate its environment. Follow these steps to set up and run DB-BERT experiments:
 
-```
-sudo apt install libpq-dev=12.16-0ubuntu0.20.04.1
+Prerequisites
+
+	1.	Install Docker
+	•	Ensure Docker is installed on your system. You can download and install Docker from Docker’s official website.
+	2.	Clone the Repository
+	•	Clone the DB-BERT repository:
+
+git clone https://github.com/JoelJacobStephen/DB-Bert-Mod
 cd dbbert
-sudo pip install -r requirements.txt
-```
 
-5. Install benchmark databases using scripts in `scripts` folder (installing all databases may take one to two hours):
 
-```
-sudo scripts/installtpch.sh
-sudo scripts/installjob.sh
-```
 
-6. You can now run experiments with DB-BERT, e.g.:
+Setup with Docker
 
-```
-PYTHONPATH=src python3.9 src/run/run_dbbert.py demo_docs/postgres100 64000000000 200000000000 8 pg tpch dbbert dbbert "sudo systemctl restart postgresql" /tmp/tpchdata/queries.sql --recover_cmd="sudo rm /var/lib/postgresql/12/main/postgresql.auto.conf"
-```
+	1.	Build the Docker Image
+	•	From the dbbert directory, build the Docker image:
+
+docker build -t dbbert:latest .
+
+
+	2.	Run the Docker Container
+	•	Start a Docker container using the built image:
+
+docker run -it --rm -p 8501:8501 dbbert:latest
+
+
+	•	This will start the Streamlit GUI and expose it on port 8501. Access it by navigating to http://localhost:8501 in your browser.
+
+	3.	Interactive Shell (Optional)
+	•	To access an interactive shell inside the container for custom experiments, use:
+
+docker run -it --rm --entrypoint /bin/bash dbbert:latest
+
+
+
+Running Experiments
+
+Once inside the container, you can run DB-BERT experiments. Example:
+
+PYTHONPATH=src python3 src/run/run_dbbert.py demo_docs/postgres100 64000000000 200000000000 8 pg tpch dbbert dbbert "sudo systemctl restart postgresql" /tmp/tpchdata/queries.sql --recover_cmd="sudo rm /var/lib/postgresql/12/main/postgresql.auto.conf"
 
 During execution, DB-BERT generates two result files:
+	•	dbbert_results_performance: Contains performance measurements.
+	•	dbbert_results_configure: Describes configurations used for each trial run.
 
-- dbbert_results_performance: contains tab-separated rows describing performance measurements for each trial run. The columns represent (from left to right) the run counter, the evaluation counter within the run, the time since the start of the current run in milliseconds, the optimal performance achieved over all evaluations within the run (e.g., if minimizing run time, this is the minimal query execution time in milliseconds), and the performance measured for the current trial run.
-- dbbert_results_configure: contains tab-separated rows describing configurations used for each trial run. The columns represent (from left to right) the run counter, the evaluation counter within the run, the time since the start of the current run in milliseconds, the optimal configuration over all evaluations within the run, and the current configuration. Each configuration is represented by a dictionary, mapping parameter names to their values (it only contains parameters with non-default settings).
+Notes
 
-See next section for explanations on DB-BERT's command line parameters.
+	•	The PostgreSQL and MySQL databases are pre-configured with a user named dbbert and password dbbert.
+	•	Benchmark databases (e.g., TPC-H and JOB) are installed during the Docker build process.
+
+# Using DB-BERT: GUI
+
+- To start the GUI, run `streamlit run src/run/interface.py` from the DB-BERT root directory.
+- If accessing DB-BERT on a remote EC2 server, make sure to enable inbound traffic to port 8501.
+- Enter the URL shown in the console into your Web browser to access the interface.
+- You can select settings to read from configuration files in the `demo_configs` folder.
+- Select a collection of tuning text documents for extraction (e.g., from the `demo_docs` folder).
+- You may change parameter related to database access, learning, and tuning goals.
+- Click on the `Start Tuning` button to start the tuning process.
 
 # Using DB-BERT: CLI
 
@@ -104,38 +127,3 @@ You may also want to set the following parameters:
 | min_batch_size      | batch size used for text analysis (e.g., `8`, optimal settings depend on language model).                                                                                    |
 | recover_cmd         | command line command to reset database configuration if server restart is impossible. E.g., use `"sudo rm /var/lib/postgresql/12/main/postgresql.auto.conf"` for PostgreSQL. |
 
-# Using DB-BERT: GUI
-
-- To start the GUI, run `streamlit run src/run/interface.py` from the DB-BERT root directory.
-- If accessing DB-BERT on a remote EC2 server, make sure to enable inbound traffic to port 8501.
-- Enter the URL shown in the console into your Web browser to access the interface.
-- You can select settings to read from configuration files in the `demo_configs` folder.
-- Select a collection of tuning text documents for extraction (e.g., from the `demo_docs` folder).
-- You may change parameter related to database access, learning, and tuning goals.
-- Click on the `Start Tuning` button to start the tuning process.
-
-# Resources
-
-A video talk introducing the vision behind this project is [available online](https://youtu.be/Spa5qzKbJ4M). Please cite:
-
-```
-@inproceedings{Trummer2022,
-author = {Trummer, Immanuel},
-booktitle = {SIGMOD},
-pages = {190--203},
-title = {{DB-BERT: a Database Tuning Tool that ``Reads the Manual''}},
-url = {https://doi.org/10.1145/3514221.3517843},
-year = {2022}
-}
-
-@article{Trummer2021nlp,
-author = {Trummer, Immanuel},
-journal = {PVLDB},
-number = {7},
-pages = {1159--1165},
-title = {{The Case for NLP-Enhanced Database Tuning: Towards Tuning Tools that “Read the Manual”}},
-url = {https://doi.org/10.14778/3450980.3450984},
-volume = {14},
-year = {2021}
-}
-```
