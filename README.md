@@ -10,7 +10,7 @@ Additionally, certain core modules have been reimplemented as part of this proje
 
 ## What is DB-BERT?
 DB-BERT extracts hints for database parameter settings from text via natural language analysis. It then optimizes parameter settings for a given workload and performance metric using reinforcement learning.
-Github repo: [DB-Bert](https://github.com/itrummer/dbbert)
+Github repo: [DB-BERT](https://github.com/itrummer/dbbert)
 
 ## Running Experiments
 
