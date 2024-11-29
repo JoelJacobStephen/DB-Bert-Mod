@@ -8,8 +8,6 @@ To address these issues, this project introduces significant updates, including 
 
 Additionally, certain core modules have been reimplemented as part of this project. This reimplementation serves not only to improve compatibility but also as a means to better understand the underlying algorithms and methodologies used in DB-BERT. These efforts aim to preserve the essence of DB-BERT while enhancing its usability, maintainability, and relevance in contemporary systems.
 
-This repository offers a comprehensive and modernized approach to working with DB-BERT, making it easier for researchers, developers, and enthusiasts to explore its capabilities and delve into the algorithms that power it.
-
 # DB-BERT: The Tuning Tool that "Reads" the Manual
 
 DB-BERT extracts hints for database parameter settings from text via natural language analysis. It then optimizes parameter settings for a given workload and performance metric using reinforcement learning.
@@ -23,32 +21,32 @@ To simplify the setup process, DB-BERT now uses Docker to encapsulate its enviro
 ### Prerequisites
 
 1. **Install Docker**
-   - Ensure Docker is installed on your system. You can download and install Docker from [Docker’s official website](https://www.docker.com/products/docker-desktop).
+- Ensure Docker is installed on your system. You can download and install Docker from [Docker’s official website](https://www.docker.com/products/docker-desktop).
 
 2. **Clone the Repository**
-   - Clone the DB-BERT repository:
-     ```bash
+- Clone the DB-BERT repository:
+  ```bash
      git clone https://github.com/JoelJacobStephen/DB-Bert-Mod
      cd dbbert
-     ```
+  ```
 
 ### Setup with Docker
 
 1. **Build the Docker Image**
-   - From the `dbbert` directory, build the Docker image:
+- From the `dbbert` directory, build the Docker image:
      ```bash
      docker build -t dbbert:latest .
      ```
 
 2. **Run the Docker Container**
-   - Start a Docker container using the built image:
+- Start a Docker container using the built image:
      ```bash
      docker run -it --rm -p 8501:8501 dbbert:latest
      ```
-   - This will start the Streamlit GUI and expose it on port `8501`. Access it by navigating to [http://localhost:8501](http://localhost:8501) in your browser.
+- This will start the Streamlit GUI and expose it on port `8501`. Access it by navigating to [http://localhost:8501](http://localhost:8501) in your browser.
 
 3. **Interactive Shell (Optional)**
-   - To access an interactive shell inside the container for custom experiments, use:
+- To access an interactive shell inside the container for custom experiments, use:
      ```bash
      docker run -it --rm --entrypoint /bin/bash dbbert:latest
      ```
