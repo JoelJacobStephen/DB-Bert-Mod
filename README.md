@@ -32,7 +32,7 @@ To simplify the setup process, DB-BERT now uses Docker to encapsulate its enviro
 - Install [JOB Benchmark](https://drive.google.com/uc?id=1-dT0jCGFLwB1VH_76lLn6V-f4E39Eoiy)
 
 4. **Move Downloaded Folders to the `scripts` directory**
-- Move both `tpchdata` and `jobdata` folders into the `scripts` folder.
+- Move both `tpchdata` and `jobdata` folders that were downloaded in the previous step into the `scripts` folder.
 
 ### Setup with Docker
 
