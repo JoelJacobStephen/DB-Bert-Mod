@@ -1,8 +1,14 @@
-# DB-BERT MOD
+# DB-BERT Mod
 
-## An attempt to slightly modify DB-BERT as a part of an implementation project
+## Introduction
 
-<img align="right" src="https://github.com/itrummer/dbbert/blob/7f8b9914ca4ef1081cfeeb1685c47e93a951ce6e/dbbert.png" width="192" alt="DB-BERT Logo">
+This project is an attempt to reimplement and modernize some core aspects of DB-BERT, a powerful tool for database tuning that extracts configuration hints from textual documents using natural language processing and optimizes database settings with reinforcement learning. Given that the original implementation of DB-BERT was created some time ago, many dependencies and system requirements had become outdated, making it challenging to set up and use the tool in modern environments.
+
+To address these issues, this project introduces significant updates, including the adoption of a Docker-based setup. The new Docker configuration ensures that all dependencies and software versions are updated to the latest standards, providing a seamless and hassle-free environment for building and running DB-BERT. Users can now get started with minimal effort, avoiding the complexities of manual installations and version conflicts.
+
+Additionally, certain core modules have been reimplemented as part of this project. This reimplementation serves not only to improve compatibility but also as a means to better understand the underlying algorithms and methodologies used in DB-BERT. These efforts aim to preserve the essence of DB-BERT while enhancing its usability, maintainability, and relevance in contemporary systems.
+
+This repository offers a comprehensive and modernized approach to working with DB-BERT, making it easier for researchers, developers, and enthusiasts to explore its capabilities and delve into the algorithms that power it.
 
 # DB-BERT: The Tuning Tool that "Reads" the Manual
 
@@ -49,7 +55,7 @@ To simplify the setup process, DB-BERT now uses Docker to encapsulate its enviro
 
 ### Running Experiments
 
-- Once inside the container, you can run DB-BERT experiments. Example:
+- Once inside the container, you can run DB-BERT experiments using the CLI. Example:
   ```bash
   PYTHONPATH=src python3 src/run/run_dbbert.py demo_docs/postgres100 64000000000 200000000000 8 pg tpch dbbert dbbert "sudo systemctl restart postgresql" /tmp/tpchdata/queries.sql --recover_cmd="sudo rm /var/lib/postgresql/12/main/postgresql.auto.conf"
   ```
@@ -67,16 +73,6 @@ To simplify the setup process, DB-BERT now uses Docker to encapsulate its enviro
 
 ## Using DB-BERT: GUI
 
-- To start the GUI, run:
-  ```bash
-  streamlit run src/run/interface.py
-  ```
-  from the DB-BERT root directory.
-
-- If accessing DB-BERT on a remote EC2 server, make sure to enable inbound traffic to port `8501`.
-
-- Enter the URL shown in the console into your web browser to access the interface.
-
 - You can:
   - Select settings to read from configuration files in the `demo_configs` folder.
   - Select a collection of tuning text documents for extraction (e.g., from the `demo_docs` folder).
@@ -86,8 +82,6 @@ To simplify the setup process, DB-BERT now uses Docker to encapsulate its enviro
 ---
 
 ## Using DB-BERT: CLI
-
-You can also use DB-BERT from the command line using `src/run/run_dbbert.py`.
 
 ### Required Parameters
 
