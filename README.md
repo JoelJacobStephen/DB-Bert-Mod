@@ -56,24 +56,24 @@ To simplify the setup process, DB-BERT now uses Docker to encapsulate its enviro
      ```
 4. **Start Postgres and MySQL server (if not started automatically)**
 
-   - After running the container, access it using the following command:
+- After running the container, access it using the following command:
      ```bash
      docker exec -it <container_name> /bin/bash
      ```
      Replace `<container_name>` with the actual name of the container (e.g., `nice_noyce`).
 
-   - Inside the container, modify the `max_wal_size` parameter in the PostgreSQL configuration file:
+- Inside the container, modify the `max_wal_size` parameter in the PostgreSQL configuration file:
      ```bash
      Modify max_wal_size from '1GB' to '2GB' in /etc/postgresql/15/main/postgresql.conf
      ```
 
-   - Start the necessary services:
+- Start the necessary services:
      ```bash
      sudo service postgresql start
      sudo service mysql start
      ```
 
-   - Ensure the services are running properly after starting them.
+- Ensure the services are running properly after starting them.
     
 ### Running Experiments
 
