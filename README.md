@@ -1,124 +1,141 @@
-# DB-BERT Mod
+# DB-BERT MOD
 
-## Introduction
+## An attempt to slightly modify DB-BERT as a part of an implementation project
 
-This project is an attempt to reimplement and modernize some core aspects of DB-BERT, a powerful tool for database tuning that extracts configuration hints from textual documents using natural language processing and optimizes database settings with reinforcement learning. Given that the original implementation of DB-BERT was created some time ago, many dependencies and system requirements had become outdated, making it challenging to set up and use the tool in modern environments.
+<img align='right' src='https://github.com/itrummer/dbbert/blob/7f8b9914ca4ef1081cfeeb1685c47e93a951ce6e/dbbert.png' width='192'>
 
-To address these issues, this project introduces significant updates, including the adoption of a Docker-based setup. The new Docker configuration ensures that all dependencies and software versions are updated to the latest standards, providing a seamless and hassle-free environment for building and running DB-BERT. Users can now get started with minimal effort, avoiding the complexities of manual installations and version conflicts.
+# DB-BERT: the Tuning Tool that "Reads" the Manual
 
-Additionally, certain core modules have been reimplemented as part of this project. This reimplementation serves not only to improve compatibility but also as a means to better understand the underlying algorithms and methodologies used in DB-BERT. These efforts aim to preserve the essence of DB-BERT while enhancing its usability, maintainability, and relevance in contemporary systems.
-
-## What is DB-BERT?
 DB-BERT extracts hints for database parameter settings from text via natural language analysis. It then optimizes parameter settings for a given workload and performance metric using reinforcement learning.
-Github repo: [DB-BERT](https://github.com/itrummer/dbbert)
 
-## Running Experiments
+# Running Experiments
 
-To simplify the setup process, DB-BERT now uses Docker to encapsulate its environment. Follow these steps to set up and run DB-BERT experiments:
+The following instructions have been tested on a p3.2xlarge EC 2 instance with Deep Learning Base GPU AMI (Ubuntu 20.04) 20230811 AMI. On that system, run them from the ubuntu home directory.
 
-### Prerequisites
+1. Install PostgreSQL and MySQL, e.g., run:
 
-1. **Install Docker**
-- Ensure Docker is installed on your system. You can download and install Docker from [Docker’s official website](https://www.docker.com/products/docker-desktop).
+```
+sudo apt-get update
+sudo apt install postgresql-12
+sudo apt install mysql-server-8.0
+```
 
-2. **Clone the Repository**
-- Clone the DB-BERT repository:
-  ```bash
-     git clone https://github.com/JoelJacobStephen/DB-Bert-Mod
-     cd dbbert
-  ```
-3. **Download Benchmarks**
-- Install [TPC-H Benchmark](https://drive.google.com/uc?id=1BjHTNXwGoZIkadECex3PzMdYuSJ1NCOp)
-- Install [JOB Benchmark](https://drive.google.com/uc?id=1-dT0jCGFLwB1VH_76lLn6V-f4E39Eoiy)
+2. Create a user named "dbbert" with password "dbbert" for PostgreSQL and MySQL:
 
-4. **Move Downloaded Folders to the `scripts` directory**
-- Move both `tpchdata` and `jobdata` folders that were downloaded in the previous step into the `scripts` folder.
+```
+sudo adduser dbbert # Type "dbbert" as password twice, then press enter repeatedly, finally "Y" to confirm
+sudo -u postgres psql -c "create user dbbert with password 'dbbert' superuser;"
+sudo mysql -e "create user 'dbbert'@'localhost' identified by 'dbbert'; grant all privileges on *.* to 'dbbert'@'localhost'; flush privileges;"
+```
 
-### Setup with Docker
+3. Download this repository, e.g., run:
 
-1. **Build the Docker Image**
-- From the `dbbert` directory, build the Docker image:
-     ```bash
-     docker build -t dbbert:latest .
-     ```
+```
+git clone https://github.com/itrummer/dbbert
+```
 
-2. **Run the Docker Container**
-- Start a Docker container using the built image:
-     ```bash
-     docker run -it --rm -p 8501:8501 dbbert:latest
-     ```
-- This will start the Streamlit GUI and expose it on port `8501`. Access it by navigating to [http://localhost:8501](http://localhost:8501) in your browser.
+4. Install dependencies:
 
-3. **Interactive Shell (Optional)**
-- To access an interactive shell inside the container for custom experiments, use:
-     ```bash
-     docker run -it --rm --entrypoint /bin/bash dbbert:latest
-     ```
+```
+sudo apt install libpq-dev=12.16-0ubuntu0.20.04.1
+cd dbbert
+sudo pip install -r requirements.txt
+```
 
-### Running Experiments
+5. Install benchmark databases using scripts in `scripts` folder (installing all databases may take one to two hours):
 
-- Once inside the container, you can run DB-BERT experiments using the CLI. Example:
-  ```bash
-  PYTHONPATH=src python3 src/run/run_dbbert.py demo_docs/postgres100 64000000000 200000000000 8 pg tpch dbbert dbbert "sudo systemctl restart postgresql" /tmp/tpchdata/queries.sql --recover_cmd="sudo rm /var/lib/postgresql/12/main/postgresql.auto.conf"
-  ```
+```
+sudo scripts/installtpch.sh
+sudo scripts/installjob.sh
+```
 
-- During execution, DB-BERT generates two result files:
-  - **dbbert_results_performance**: Contains performance measurements.
-  - **dbbert_results_configure**: Describes configurations used for each trial run.
+6. You can now run experiments with DB-BERT, e.g.:
 
-### Notes
+```
+PYTHONPATH=src python3.9 src/run/run_dbbert.py demo_docs/postgres100 64000000000 200000000000 8 pg tpch dbbert dbbert "sudo systemctl restart postgresql" /tmp/tpchdata/queries.sql --recover_cmd="sudo rm /var/lib/postgresql/12/main/postgresql.auto.conf"
+```
 
-1. The PostgreSQL and MySQL databases are pre-configured with a user named `dbbert` and password `dbbert`.
-2. Benchmark databases (e.g., TPC-H and JOB) are installed during the Docker build process.
+During execution, DB-BERT generates two result files:
 
----
+- dbbert_results_performance: contains tab-separated rows describing performance measurements for each trial run. The columns represent (from left to right) the run counter, the evaluation counter within the run, the time since the start of the current run in milliseconds, the optimal performance achieved over all evaluations within the run (e.g., if minimizing run time, this is the minimal query execution time in milliseconds), and the performance measured for the current trial run.
+- dbbert_results_configure: contains tab-separated rows describing configurations used for each trial run. The columns represent (from left to right) the run counter, the evaluation counter within the run, the time since the start of the current run in milliseconds, the optimal configuration over all evaluations within the run, and the current configuration. Each configuration is represented by a dictionary, mapping parameter names to their values (it only contains parameters with non-default settings).
 
-## Using DB-BERT: GUI
+See next section for explanations on DB-BERT's command line parameters.
 
-- You can:
-  - Select settings to read from configuration files in the `demo_configs` folder.
-  - Select a collection of tuning text documents for extraction (e.g., from the `demo_docs` folder).
-  - Change parameters related to database access, learning, and tuning goals.
-  - Click the **Start Tuning** button to start the tuning process.
+# Using DB-BERT: CLI
 
----
+Use DB-BERT from the command line using `src/run/run_dbbert.py`.
 
-## Using DB-BERT: CLI
+## Required Parameters
 
-### Required Parameters
-
-The module requires the following parameters:
+The module requires setting the following parameters:
 
 | Parameter        | Explanation                                                                                                                                                   |
-|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `text_source_path` | Path to text with tuning hints. Text is stored as a `.csv` file, containing document IDs and text snippets. Example documents can be found in the `demo_docs` folder. |
-| `memory`         | Amount of main memory of the target platform, measured in bytes.                                                                                              |
-| `disk`           | Amount of disk space on the target platform, measured in bytes.                                                                                               |
-| `cores`          | Number of cores available on the target platform.                                                                                                             |
-| `dbms`           | Whether to tune PostgreSQL (set to `pg`) or MySQL (set to `ms`).                                                                                              |
-| `db_name`        | Name of the database on which the target workload is running.                                                                                                 |
-| `db_user`        | Name of the database login with access to the target database.                                                                                                |
-| `db_pwd`         | Password of the database login.                                                                                                                               |
-| `restart_cmd`    | Command for restarting the database server from the command line. E.g., `"sudo systemctl restart postgresql"` or `"sudo systemctl restart mysql"`.           |
-| `query_path`     | Path to `.sql` file containing queries of the target workload, separated by semicolons (no semicolon after the last query).                                    |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| text_source_path | path to text with tuning hints. Text is stored as .csv file, containing document IDs and text snippets. You find example documents in the `demo_docs` folder. |
+| memory           | the amount of main memory of the target platform, measured in bytes.                                                                                          |
+| disk             | the amount of disk space on the target platform, measured in bytes.                                                                                           |
+| cores            | the number of cores available on the target platform.                                                                                                         |
+| dbms             | whether to tune PostgreSQL (set to `pg`) or MySQL (set to `ms`).                                                                                              |
+| db_name          | name of database on which target workload is running.                                                                                                         |
+| db_user          | name of database login with access to target database.                                                                                                        |
+| db_pwd           | password of database login.                                                                                                                                   |
+| restart_cmd      | command for restarting database server from command line. E.g., `"sudo systemctl restart postgresql"` or `"sudo systemctl restart mysql"`.                    |
+| query_path       | path to .sql file containing queries of target workload, separated by semicolon (no semicolon after the last query!).                                         |
 
-> **Note**: Specifying the `recover_cmd` parameter is optional but highly recommended. Otherwise, sub-optimal parameter settings may prevent a database server restart, making it difficult for DB-BERT to correct faulty parameter values.
+Note: specifying `recover_cmd` parameter is optional but highly recommended (otherwise, sub-optimal parameter settings may prevent a restart of the database server, preventing DB-BERT from correcting faulty parameter values).
 
-### Optional Parameters
+## Optional Parameters
 
 You may also want to set the following parameters:
 
-| Parameter            | Explanation                                                                                                                                                                  |
-|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `max_length`         | Divide text into chunks of at most that many characters for extracting tuning hints.                                                                                         |
-| `filter_params`      | Filter text passages via a simple heuristic (set to `1`, recommended) or not (set to `0`).                                                                                   |
-| `use_implicit`       | Try to detect implicit parameter references (set to `1`, recommended) or not (set to `0`).                                                                                   |
-| `hint_order`         | Try out tuning hints in document order (`0`), parameter order (`1`), or optimized order (`2`, recommended).                                                                  |
-| `nr_frames`          | Maximal number of frames to execute for learning (set high, e.g., `100000`, to rely on timeout instead).                                                                     |
-| `timeout_s`          | Maximal number of seconds used for tuning (this is approximate since the system finishes trial runs before checking for timeouts).                                           |
-| `performance_scaling`| Scale rewards due to performance improvements by this factor.                                                                                                                |
-| `assignment_scaling` | Scale rewards due to successful parameter value changes by this factor.                                                                                                      |
-| `nr_evaluations`     | Number of trial runs based on the same collection of tuning hints (recommended: `2`).                                                                                        |
-| `nr_hints`           | Number of hints to consider in combination (recommended: `20`).                                                                                                              |
-| `min_batch_size`     | Batch size used for text analysis (e.g., `8`; optimal settings depend on the language model).                                                                                 |
-| `recover_cmd`        | Command line command to reset database configuration if server restart is impossible. E.g., `"sudo rm /var/lib/postgresql/12/main/postgresql.auto.conf"` for PostgreSQL.      |
+| Parameter           | Explanation                                                                                                                                                                  |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| max_length          | divide text into chunks of at most that many characters for extracting tuning hints.                                                                                         |
+| filter_params       | filter text passages via simple heuristic (set to `1`, recommended) or not (set to `0`).                                                                                     |
+| use_implicit        | try to detect implicit parameter references (set to `1`, recommended) or not (set to `0`).                                                                                   |
+| hint_order          | try out tuning hints in document order (set to `0`), parameter order (set to `1`), or optimized order (set to `2`, recommended).                                             |
+| nr_frames           | maximal number of frames to execute for learning (recommendation: set high, e.g. `100000`, to rely on timeout instead).                                                      |
+| timeout_s           | maximal number of seconds used for tuning (this number is approximate since system finishes trial runs before checking for timeouts).                                        |
+| performance_scaling | scale rewards due to performance improvements by this factor.                                                                                                                |
+| assignment_scaling  | scale rewards due to successful parameter value changes by this factor.                                                                                                      |
+| nr_evaluations      | number of trial runs based on the same collection of tuning hints (recommended: `2`).                                                                                        |
+| nr_hints            | number of hints to consider in combination (recommended: `20`).                                                                                                              |
+| min_batch_size      | batch size used for text analysis (e.g., `8`, optimal settings depend on language model).                                                                                    |
+| recover_cmd         | command line command to reset database configuration if server restart is impossible. E.g., use `"sudo rm /var/lib/postgresql/12/main/postgresql.auto.conf"` for PostgreSQL. |
+
+# Using DB-BERT: GUI
+
+- To start the GUI, run `streamlit run src/run/interface.py` from the DB-BERT root directory.
+- If accessing DB-BERT on a remote EC2 server, make sure to enable inbound traffic to port 8501.
+- Enter the URL shown in the console into your Web browser to access the interface.
+- You can select settings to read from configuration files in the `demo_configs` folder.
+- Select a collection of tuning text documents for extraction (e.g., from the `demo_docs` folder).
+- You may change parameter related to database access, learning, and tuning goals.
+- Click on the `Start Tuning` button to start the tuning process.
+
+# Resources
+
+A video talk introducing the vision behind this project is [available online](https://youtu.be/Spa5qzKbJ4M). Please cite:
+
+```
+@inproceedings{Trummer2022,
+author = {Trummer, Immanuel},
+booktitle = {SIGMOD},
+pages = {190--203},
+title = {{DB-BERT: a Database Tuning Tool that ``Reads the Manual''}},
+url = {https://doi.org/10.1145/3514221.3517843},
+year = {2022}
+}
+
+@article{Trummer2021nlp,
+author = {Trummer, Immanuel},
+journal = {PVLDB},
+number = {7},
+pages = {1159--1165},
+title = {{The Case for NLP-Enhanced Database Tuning: Towards Tuning Tools that “Read the Manual”}},
+url = {https://doi.org/10.14778/3450980.3450984},
+volume = {14},
+year = {2021}
+}
+```
